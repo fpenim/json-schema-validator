@@ -1,11 +1,10 @@
 const fs = require("fs");
-const runValidation = require("../src/validation/validator");
+const validate = require("../src/validation/validator");
 
 test("Empty Schema (empty object)", () => {
-  return runValidation({}, {}).then( (data) => {
-    expect(data).toBeDefined();
-    expect(data.length).toBe(0);
-  });
+
+  let errors = validate([{}], {}, null);
+  expect(errors).toBeNull();
 });
 
 test("Attributes Schema", () => {
@@ -15,12 +14,13 @@ test("Attributes Schema", () => {
   let inputObj = fs.readFileSync("examples/objects/attributes.json"); 
   let jsonObj = JSON.parse(inputObj);
 
-  return runValidation(jsonSchema, jsonObj).then( (data) => {
-    expect(data).toBeDefined();
-    expect(data.length).toBe(1);
-    expect(data[0].errors.length).toBe(1);
-    expect(data[0].errors).toContain('should match format "uri"');
-  });
+  let errors = validate([jsonSchema], jsonObj, null);
+
+  expect(errors).toBeDefined();
+  expect(errors.length).toBe(1);
+
+  expect(errors[0].dataPath).toBe(".attributes['breed'][0].terms[0].url");
+  expect(errors[0].message).toBe("should match format \"uri\"");
 });
 
 test("BioSamples Schema - FAANG \'organism\' sample", () => {
@@ -30,10 +30,8 @@ test("BioSamples Schema - FAANG \'organism\' sample", () => {
   let inputObj = fs.readFileSync("examples/objects/faang-organism-sample.json");
   let jsonObj = JSON.parse(inputObj);
 
-  return runValidation(jsonSchema, jsonObj).then( (data) => {
-    expect(data).toBeDefined();
-    expect(data.length).toBe(0);
-  });
+  let errors = validate([jsonSchema], jsonObj, null);
+  expect(errors).toBeNull();
 });
 
 test("Study Schema", () => {
@@ -43,8 +41,13 @@ test("Study Schema", () => {
   let inputObj = fs.readFileSync("examples/objects/study.json");
   let jsonObj = JSON.parse(inputObj);
 
-  return runValidation(jsonSchema, jsonObj).then( (data) => {
-    expect(data).toBeDefined();
-    expect(data.length).toBe(2);
-  });
+  let errors = validate([jsonSchema], jsonObj, null);
+ 
+  expect(errors).toBeDefined();
+  expect(errors.length).toBe(2);
+ 
+  expect(errors[0].dataPath).toBe("");
+  expect(errors[0].message).toBe("should have required property 'alias'");
+  expect(errors[1].dataPath).toBe("");
+  expect(errors[1].message).toBe("should have required property 'StudyDataType'");
 });

@@ -1,11 +1,9 @@
 # JSON Schema Validator
-[![Build Status](https://travis-ci.org/EMBL-EBI-SUBS/json-schema-validator.svg?branch=master)](https://travis-ci.org/EMBL-EBI-SUBS/json-schema-validator) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/7fbabc981e294249a9a0967965418058)](https://www.codacy.com/app/fpenim/json-schema-validator?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=EMBL-EBI-SUBS/json-schema-validator&amp;utm_campaign=Badge_Grade)
+[![Build Status](https://travis-ci.org/fpenim/json-schema-validator.svg?branch=master)](https://travis-ci.org/fpenim/json-schema-validator) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/7fbabc981e294249a9a0967965418058)](https://www.codacy.com/app/fpenim/json-schema-validator?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=fpenim/json-schema-validator&amp;utm_campaign=Badge_Grade)
 [![tested with jest](https://img.shields.io/badge/tested_with-jest-99424f.svg)](https://github.com/facebook/jest)
 
-This repository contains a [JSON Schema](http://json-schema.org/) validator for the EMBL-EBI Submissions Project. This validator runs as a standalone node server that receives validation requests and gives back it's results.
+This repository contains a [JSON Schema](http://json-schema.org/). This validator runs as a standalone node server that receives validation requests and gives back it's results.
 The validation is done using the [AJV](https://github.com/epoberezkin/ajv) library version ^6.0.0 that fully supports the JSON Schema **draft-07**.
-
-Deployed for tests purposes on heroku: https://subs-json-schema-validator.herokuapp.com/validate
 
 ## Contents
 - [Getting Started](README.md#getting-started)
@@ -42,7 +40,7 @@ npm -v
 #### Project
 Clone project and install dependencies:
 ```
-git clone https://github.com/EMBL-EBI-SUBS/json-schema-validator.git
+git clone https://github.com/fpenim/json-schema-validator.git
 cd json-schema-validator
 npm install
 ```
@@ -92,54 +90,9 @@ nodemon src/server
 ```
 
 ## Validation API
-This validator exposes two endpoints that will accept POST requests: `/validate` and `/prototype`.
+This validator exposes one endpoint that will accept POST requests: `/validate` .
 
 ### /validate
-The endpoint will expect the body to have the following structure:
-```js
-{
-  "schema": {},
-  "object": {}
-}
-```
-Where the schema should be a valid json schema to validate the object against.
-
-**Example:** 
-```js
-{
-  "schema": {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    
-    "type": "object",
-    "properties": {
-      "alias": {
-        "description": "A sample unique identifier in a submission.",
-        "type": "string"
-      },
-      "taxonId": {
-        "description": "The taxonomy id for the sample species.",
-        "type": "integer"
-      },
-      "taxon": {
-        "description": "The taxonomy name for the sample species.",
-        "type": "string"
-      },
-      "releaseDate": {
-        "description": "Date from which this sample is released publicly.",
-        "type": "string",
-        "format": "date"
-      }
-    },  
-    "required": ["alias", "taxonId" ]
-  },
-  "object": {
-    "alias": "MA456",
-    "taxonId": 9606
-  }
-}
-```
-
-### /prototype
 The endpoint will expect the body to have the following structure:
 ```js
 {
@@ -148,34 +101,37 @@ The endpoint will expect the body to have the following structure:
   "rootSchemaId": ""
 }
 ```
+Where the schemas should contain at least one valid json schema to validate the entity against. Multiple schemas may be provided when these reference each other using the keyword `"$ref"`. When this is the case, the `"$id"` of the primary/root schema must also be provided.
+
 **Example:** 
 ```js
 {
-  "schemas": 
-  [{
-    "$id": "http://example.com/schemas/schema.json",
-    "type": "object",
-    "properties": {
-      "foo": { "$ref": "defs.json#/definitions/int" },
-      "bar": { "$ref": "definitions.json#/definitions/str" },
-      "abc": { "$ref": "defs.json#/definitions/array" }
+  "schemas": [
+    {
+      "$id": "http://example.com/schemas/schema.json",
+      "type": "object",
+      "properties": {
+        "foo": { "$ref": "defs.json#/definitions/int" },
+        "bar": { "$ref": "definitions.json#/definitions/str" },
+        "abc": { "$ref": "defs.json#/definitions/array" }
+      },
+      "required": ["foo"]
     },
-    "required": ["foo"]
-  },
-  {
-    "$id": "http://example.com/schemas/defs.json",
-    "definitions": {
-      "int": { "type": "integer" },
-      "array": { "$ref": "definitions.json#/definitions/nextarray" }
+    {
+      "$id": "http://example.com/schemas/defs.json",
+      "definitions": {
+        "int": { "type": "integer" },
+        "array": { "$ref": "definitions.json#/definitions/nextarray" }
+      }
+    },
+    {
+      "$id": "http://example.com/schemas/definitions.json",
+      "definitions": {
+        "str": { "type": "string" },
+        "nextarray": { "type": "string" }
+      }
     }
-  },
-  {
-    "$id": "http://example.com/schemas/definitions.json",
-    "definitions": {
-      "str": { "type": "string" },
-      "nextarray": { "type": "string" }
-    }
-  }],
+  ],
   "rootSchemaId": "http://example.com/schemas/schema.json",
   "entity": {
     "foo": 3,
@@ -247,68 +203,8 @@ Sending malformed JSON or a body with either the schema or the submittable missi
 
 ## Custom keywords
 The AJV library supports the implementation of custom json schema keywords to address validation scenarios that go beyond what json schema can handle.
-This validator has two custom keywords implemented, `isChildTermOf` and `isValidTerm`.
 
-### isChildTermOf
-This custom keyword *evaluates if an ontology term is child of other*. This keyword is applied to a string (url) and **passes validation if the term is a child of the term defined in the schema**.
-The keyword requires the **parent term** and the **ontology id**, both of which should exist in [OLS - Ontology Lookup Service](https://www.ebi.ac.uk/ols).
-
-This keyword works by doing an asynchronous call to the [OLS API](https://www.ebi.ac.uk/ols/api/) that will respond with the required information to know if a given term is child of another. 
-Being an async validation step, whenever used is a schema, the schema must have the flag: `"$async": true` in it's object root.
-
-#### Usage
-Schema:
-```js
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$async": true,
-  "properties": {
-    "term": { 
-      "type": "string", 
-      "format": "uri",
-      "isChildTermOf": {
-        "parentTerm": "http://purl.obolibrary.org/obo/PATO_0000047",
-        "ontologyId": "pato"
-      } 
-    }
-  }
-}
-```
-JSON object:
-```js
-{
-  "term": "http://purl.obolibrary.org/obo/PATO_0000383"
-}
-```
-
-### isValidTerm
-This custom keyword *evaluates if a given ontology term url exists in OLS* ([Ontology Lookup Service](https://www.ebi.ac.uk/ols)). It is applied to a string (url) and **passes validation if the term exists in OLS**. It can be aplied to any string defined in the schema.
-
-This keyword works by doing an asynchronous call to the [OLS API](https://www.ebi.ac.uk/ols/api/) that will respond with the required information to determine if the term exists in OLS or not. 
-Being an async validation step, whenever used is a schema, the schema must have the flag: `"$async": true` in it's object root.
-
-#### Usage
-Schema:
-```js
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$async": true,
-
-  "properties": {
-    "url": { 
-      "type": "string", 
-      "format": "uri",
-      "isValidTerm": true 
-    } 
-  }
-}
-```
-JSON object:
-```js
-{
-  "url": "http://purl.obolibrary.org/obo/PATO_0000383"
-}
-```
+Two example custom keywords implementations are available under `examples/custom-keywords`, these are `isChildTermOf` and `isValidTerm`. For more details see the documentation on [CUSTOM KEYWORDS](CUSTOM_KW.md).
 
 ## License
  For more details about licensing see the [LICENSE](LICENSE.md).

@@ -1,5 +1,5 @@
 const fs = require("fs");
-const protoValidate = require("../src/validation/validator-prototype");
+const validate = require("../src/validation/validator");
 
 test("Base schema and definitions schema test WITH erros", () => {
     let baseSchema = fs.readFileSync("examples/schemas/references/base-sample-schema.json");
@@ -8,7 +8,7 @@ test("Base schema and definitions schema test WITH erros", () => {
     let definitionsSchema = fs.readFileSync("examples/schemas/references/definitions-schema.json");
     let jsonDefinitionsSchema = JSON.parse(definitionsSchema);
 
-    let errors = protoValidate(
+    let errors = validate(
         [jsonBaseSchema, jsonDefinitionsSchema], 
         {
             alias: "abc",
@@ -33,7 +33,7 @@ test("Base schema and definitions schema test WITHOUT errors", () => {
     let definitionsSchema = fs.readFileSync("examples/schemas/references/definitions-schema.json");
     let jsonDefinitionsSchema = JSON.parse(definitionsSchema);
 
-    let errors = protoValidate(
+    let errors = validate(
         [jsonBaseSchema, jsonDefinitionsSchema],
         {
             alias: "abc",
@@ -60,7 +60,7 @@ test("ML schema -> base schema -> definitions schema test", () => {
     let definitionsSchema = fs.readFileSync("examples/schemas/references/definitions-schema.json");
     let jsonDefinitionsSchema = JSON.parse(definitionsSchema);
 
-    let errors = protoValidate(
+    let errors = validate(
         [jsonMLSchema, jsonBaseSchema, jsonDefinitionsSchema], 
         {
             alias: "abc",

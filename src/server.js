@@ -1,6 +1,5 @@
 const express = require("express");
 const logger = require("./winston");
-const runValidation = require("./validation/validator");
 const AppError = require("./model/application-error");
 const { check, validationResult } = require("express-validator/check");
 const { handleValidation } = require("./validation/validation-handler");
@@ -33,40 +32,8 @@ app.use(function(err, req, res, next) {
 
 // -- Endpoint definition -- //
 app.post("/validate", [
-  check("schema", "Required.").exists(),
-  check("object", "Required.").exists()
-],(req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(422).json({ errors: errors.mapped() });
-  } else {
-    logger.log("debug", "Received POST request.");
-    runValidation(req.body.schema, req.body.object).then((output) => {
-      logger.log("silly", "Sent validation results.");
-      res.status(200).send(output);
-    }).catch((err) => {
-      logger.log("error", err.message);
-      res.status(500).send(new AppError(err.message));
-    });
-  }
-});
-
-app.get("/validate", (req, res) => {
-  logger.log("silly", "Received GET request.");
-  res.send({
-    message: "This is the Submissions JSON Schema Validator. Please POST to this endpoint the schema and object to validate structured as showed in bodyStructure.",
-    bodyStructure: {
-      schema: {},
-      object: {}
-    },
-    repository: "https://github.com/EMBL-EBI-SUBS/json-schema-validator"
-  });
-});
-
-app.post("/prototype", [
-    check("schemas", "Required and must be a non empty array.").isArray().not().isEmpty(),
-    check("rootSchemaId", "Required.").optional(),
-    check("entity", "Required.").exists()
+    check("schemas", "At least one schema to validate the entity against is required.").isArray().not().isEmpty(),
+    check("entity", "An entity to be validated is required.").exists()
   ], (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -74,6 +41,7 @@ app.post("/prototype", [
     } else {
       logger.log("debug", "Received POST request.");
       try {
+        logger.log("debug", "Triggered validation . . .")
         let errors = handleValidation(req.body.schemas, req.body.entity, req.body.rootSchemaId);
         return res.json(errors || []);
       } catch(err) {
@@ -84,17 +52,20 @@ app.post("/prototype", [
   }
 );
 
-app.get("/prototype", (req, res) => {
+app.get("/validate", (req, res) => {
   logger.log("silly", "Received GET request.");
   res.send({
-    message: "This is the Submissions JSON Schema Validator. Please POST to this endpoint the schema and object to validate structured as showed in bodyStructure.",
-    bodyStructure: {
-      schemas: [],
-      rootSchemaId: "",
+    message: "This is a JSON Schema Validator. Please POST to this endpoint the schema and entity to validate structured as showed bellow.",
+    body: {
+      schemas: [{}],
       entity: {}
     },
-    repository: "https://github.com/EMBL-EBI-SUBS/json-schema-validator"
+    repository: "https://github.com/fpenim/json-schema-validator"
   });
+});
+
+app.get("/", (req, res) => {
+  res.redirect("/validate");
 });
 
 app.listen(port, () => {

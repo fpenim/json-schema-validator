@@ -1,11 +1,9 @@
 # JSON Schema Validator
-[![Build Status](https://travis-ci.org/EMBL-EBI-SUBS/json-schema-validator.svg?branch=master)](https://travis-ci.org/EMBL-EBI-SUBS/json-schema-validator) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/7fbabc981e294249a9a0967965418058)](https://www.codacy.com/app/fpenim/json-schema-validator?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=EMBL-EBI-SUBS/json-schema-validator&amp;utm_campaign=Badge_Grade)
+[![Build Status](https://travis-ci.org/fpenim/json-schema-validator.svg?branch=dev)](https://travis-ci.org/fpenim/json-schema-validator) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/7fbabc981e294249a9a0967965418058)](https://www.codacy.com/app/fpenim/json-schema-validator?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=EMBL-EBI-SUBS/json-schema-validator&amp;utm_campaign=Badge_Grade)
 [![tested with jest](https://img.shields.io/badge/tested_with-jest-99424f.svg)](https://github.com/facebook/jest)
 
-This repository contains a [JSON Schema](http://json-schema.org/) validator for the EMBL-EBI Submissions Project. This validator runs as a standalone node server that receives validation requests and gives back it's results.
+This repository contains a [JSON Schema](http://json-schema.org/). This validator runs as a standalone node server that receives validation requests and gives back it's results.
 The validation is done using the [AJV](https://github.com/epoberezkin/ajv) library version ^6.0.0 that fully supports the JSON Schema **draft-07**.
-
-Deployed for tests purposes on heroku: https://subs-json-schema-validator.herokuapp.com/validate
 
 ## Contents
 - [Getting Started](README.md#getting-started)
@@ -42,7 +40,7 @@ npm -v
 #### Project
 Clone project and install dependencies:
 ```
-git clone https://github.com/EMBL-EBI-SUBS/json-schema-validator.git
+git clone https://github.com/fpenim/json-schema-validator.git
 cd json-schema-validator
 npm install
 ```
@@ -92,63 +90,68 @@ nodemon src/server
 ```
 
 ## Validation API
-This validator exposes one single endpoint that will accept POST requests. When running on you local machine it will look like: **http://localhost:3020/validate**.
+This validator exposes one endpoint that will accept POST requests: `/validate` .
 
-### Usage
+### /validate
 The endpoint will expect the body to have the following structure:
 ```js
 {
-  "schema": {},
-  "object": {}
+  "schemas": [],
+  "entity": {},
+  "rootSchemaId": ""
 }
 ```
-Where the schema should be a valid json schema to validate the object against.
+Where the schemas should contain at least one valid json schema to validate the entity against. Multiple schemas may be provided when these reference each other using the keyword `"$ref"`. When this is the case, the `"$id"` of the primary/root schema must also be provided.
 
-**Example:**
-Sending a POST request with the following body:
+**Example:** 
 ```js
 {
-  "schema": {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    
-    "type": "object",
-    "properties": {
-      "alias": {
-        "description": "A sample unique identifier in a submission.",
-        "type": "string"
+  "schemas": [
+    {
+      "$id": "http://example.com/schemas/schema.json",
+      "type": "object",
+      "properties": {
+        "foo": { "$ref": "defs.json#/definitions/int" },
+        "bar": { "$ref": "definitions.json#/definitions/str" },
+        "abc": { "$ref": "defs.json#/definitions/array" }
       },
-      "taxonId": {
-        "description": "The taxonomy id for the sample species.",
-        "type": "integer"
-      },
-      "taxon": {
-        "description": "The taxonomy name for the sample species.",
-        "type": "string"
-      },
-      "releaseDate": {
-        "description": "Date from which this sample is released publicly.",
-        "type": "string",
-        "format": "date"
+      "required": ["foo"]
+    },
+    {
+      "$id": "http://example.com/schemas/defs.json",
+      "definitions": {
+        "int": { "type": "integer" },
+        "array": { "$ref": "definitions.json#/definitions/nextarray" }
       }
-    },  
-    "required": ["alias", "taxonId" ]
-  },
-  "object": {
-    "alias": "MA456",
-    "taxonId": 9606
+    },
+    {
+      "$id": "http://example.com/schemas/definitions.json",
+      "definitions": {
+        "str": { "type": "string" },
+        "nextarray": { "type": "string" }
+      }
+    }
+  ],
+  "rootSchemaId": "http://example.com/schemas/schema.json",
+  "entity": {
+    "foo": 3,
+    "abc": ""
   }
 }
 ```
-will produce a response like:
+
+### Output
+
+Response with no validation errors:
 
 HTTP status code `200`
-```json
+```js
 []
 ```
 An example of a validation response with errors:
 
 HTTP status code `200`
-```json
+```js
 [
   {
     "errors": [
@@ -168,78 +171,40 @@ HTTP status code `200`
 Where *errors* is an array of error messages for a given input identified by its path on *dataPath*. There may be one or more error objects within the response array. An empty array represents a valid validation result.
 
 ### API Errors
-Sending malformed JSON or a body with either the schema or the submittable missing will result in an API error (the request will not reach the validation). API errors have the following structure:
+Sending malformed JSON or a body with either the schema or the submittable missing will result in an API error (the request will not reach the validation). 
 
-HTTP status code `400`
-```json
-{
-  "error": "Malformed JSON please check your request body."
-}
-```
-## Custom keywords
-The AJV library supports the implementation of custom json schema keywords to address validation scenarios that go beyond what json schema can handle.
-This validator has two custom keywords implemented, `isChildTermOf` and `isValidTerm`.
+- When sending malformed JSON:
 
-### isChildTermOf
-This custom keyword *evaluates if an ontology term is child of other*. This keyword is applied to a string (url) and **passes validation if the term is a child of the term defined in the schema**.
-The keyword requires the **parent term** and the **ontology id**, both of which should exist in [OLS - Ontology Lookup Service](https://www.ebi.ac.uk/ols).
+  HTTP status code `400` - Bad Request
+  ```js
+  {
+    "errors": "Malformed JSON please check your request body."
+  }
+  ```
+- When any of the required body values is missing:
 
-This keyword works by doing an asynchronous call to the [OLS API](https://www.ebi.ac.uk/ols/api/) that will respond with the required information to know if a given term is child of another. 
-Being an async validation step, whenever used is a schema, the schema must have the flag: `"$async": true` in it's object root.
-
-#### Usage
-Schema:
-```js
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$async": true,
-  "properties": {
-    "term": { 
-      "type": "string", 
-      "format": "uri",
-      "isChildTermOf": {
-        "parentTerm": "http://purl.obolibrary.org/obo/PATO_0000047",
-        "ontologyId": "pato"
-      } 
+  HTTP status code `422` - Unprocessable Entity
+  ```js
+  {
+    "errors": {
+      "schema": {
+        "location": "body",
+        "param": "schema",
+        "msg": "Required."
+      },
+      "object": {
+        "location": "body",
+        "param": "object",
+        "msg": "Required."
+      }
     }
   }
-}
-```
-JSON object:
-```js
-{
-  "term": "http://purl.obolibrary.org/obo/PATO_0000383"
-}
-```
+  ```
 
-### isValidTerm
-This custom keyword *evaluates if a given ontology term url exists in OLS* ([Ontology Lookup Service](https://www.ebi.ac.uk/ols)). It is applied to a string (url) and **passes validation if the term exists in OLS**. It can be aplied to any string defined in the schema.
+## Custom keywords
+The AJV library supports the implementation of custom json schema keywords to address validation scenarios that go beyond what json schema can handle.
 
-This keyword works by doing an asynchronous call to the [OLS API](https://www.ebi.ac.uk/ols/api/) that will respond with the required information to determine if the term exists in OLS or not. 
-Being an async validation step, whenever used is a schema, the schema must have the flag: `"$async": true` in it's object root.
-
-#### Usage
-Schema:
-```js
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$async": true,
-
-  "properties": {
-    "url": { 
-      "type": "string", 
-      "format": "uri",
-      "isValidTerm": true 
-    } 
-  }
-}
-```
-JSON object:
-```js
-{
-  "url": "http://purl.obolibrary.org/obo/PATO_0000383"
-}
-```
+Two example custom keywords implementations are available under `examples/custom-keywords`, these are `isChildTermOf` and `isValidTerm`. For more details see the documentation on [CUSTOM KEYWORDS](CUSTOM_KW.md).
 
 ## License
  For more details about licensing see the [LICENSE](LICENSE.md).

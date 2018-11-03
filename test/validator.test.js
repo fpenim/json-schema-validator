@@ -11,7 +11,7 @@ test("Attributes Schema", () => {
   let inputSchema = fs.readFileSync("examples/schemas/attributes-schema.json");
   let jsonSchema = JSON.parse(inputSchema);
 
-  let inputObj = fs.readFileSync("examples/objects/attributes.json"); 
+  let inputObj = fs.readFileSync("examples/entities/attributes.json"); 
   let jsonObj = JSON.parse(inputObj);
 
   let errors = validate([jsonSchema], jsonObj, null);
@@ -27,7 +27,7 @@ test("BioSamples Schema - FAANG \'organism\' sample", () => {
   let inputSchema = fs.readFileSync("examples/schemas/biosamples-schema.json");
   let jsonSchema = JSON.parse(inputSchema);
 
-  let inputObj = fs.readFileSync("examples/objects/faang-organism-sample.json");
+  let inputObj = fs.readFileSync("examples/entities/faang-organism-sample.json");
   let jsonObj = JSON.parse(inputObj);
 
   let errors = validate([jsonSchema], jsonObj, null);
@@ -38,7 +38,7 @@ test("Study Schema", () => {
   let inputSchema = fs.readFileSync("examples/schemas/submittables/study-schema.json");
   let jsonSchema = JSON.parse(inputSchema);
 
-  let inputObj = fs.readFileSync("examples/objects/study.json");
+  let inputObj = fs.readFileSync("examples/entities/study.json");
   let jsonObj = JSON.parse(inputObj);
 
   let errors = validate([jsonSchema], jsonObj, null);

@@ -1,5 +1,5 @@
 # JSON Schema Validator
-[![Build Status](https://travis-ci.org/fpenim/json-schema-validator.svg?branch=master)](https://travis-ci.org/fpenim/json-schema-validator) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/7fbabc981e294249a9a0967965418058)](https://www.codacy.com/app/fpenim/json-schema-validator?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=fpenim/json-schema-validator&amp;utm_campaign=Badge_Grade)
+[![Build Status](https://travis-ci.org/fpenim/json-schema-validator.svg?branch=dev)](https://travis-ci.org/fpenim/json-schema-validator) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/7fbabc981e294249a9a0967965418058)](https://www.codacy.com/app/fpenim/json-schema-validator?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=EMBL-EBI-SUBS/json-schema-validator&amp;utm_campaign=Badge_Grade)
 [![tested with jest](https://img.shields.io/badge/tested_with-jest-99424f.svg)](https://github.com/facebook/jest)
 
 This repository contains a [JSON Schema](http://json-schema.org/). This validator runs as a standalone node server that receives validation requests and gives back it's results.

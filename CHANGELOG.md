@@ -1,4 +1,4 @@
 # JSON Schema Validator Changelog
 
-## Release vNext
+## Release 0.1.0
 Initial release.

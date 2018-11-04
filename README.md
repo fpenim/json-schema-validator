@@ -5,14 +5,16 @@
 This repository contains a [JSON Schema](http://json-schema.org/). This validator runs as a standalone node server that receives validation requests and gives back it's results.
 The validation is done using the [AJV](https://github.com/epoberezkin/ajv) library version ^6.0.0 that fully supports the JSON Schema **draft-07**.
 
+Latest released version available [here](http://json-schema-validator.fpenim.com).
+
 ## Contents
-- [Getting Started](README.md#getting-started)
+  - [Getting Started](README.md#getting-started)
 
-- [Validation API](README.md#validation-api)
+  - [Validation API](README.md#validation-api)
 
-- [Custom keywords](README.md#custom-keywords)
+  - [Custom keywords](README.md#custom-keywords)
 
-- [License](README.md#license)
+  - [License](README.md#license)
 
 ## Getting Started
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
@@ -24,12 +26,9 @@ npm is distributed with Node.js which means that when you download Node.js, you 
 ### Installing
 
 #### Node.js / npm
-- Get Node.js: https://nodejs.org/en/ (v8.11.1 LTS)
+  - Get Node.js: https://nodejs.org/en/ (v8.11.1 LTS)
 
-- If you use [Homebrew](https://brew.sh/) you can install node by doing:
-```
-brew install node
-```
+  - If you use [Homebrew](https://brew.sh/) you can install node by doing: `brew install node`
 
 After installation check that everything is correctly installed and which versions you are running:
 ```
@@ -75,14 +74,15 @@ node src/server --pidPath=/pid/file/path/server.pid
 Note: This is the **file path** and not just the directory it will be written to.
 
 ### Executing with Docker
-1. Build docker image:
+  1. Build docker image:
 ```
 docker build -t subs/json-schema-validator .
 ```
-2. Run docker image:
+  2. Run docker image:
 ```
 docker run -p 3020:3020 -d subs/json-schema-validator
 ```
+
 ### Development
 For development purposes using [nodemon](https://nodemon.io/) is useful. It reloads the application everytime something has changed on save time.
 ```
@@ -90,10 +90,10 @@ nodemon src/server
 ```
 
 ## Validation API
-This validator exposes one endpoint that will accept POST requests: `/validate` .
+This validator exposes one endpoint that accepts `POST` requests.
 
 ### /validate
-The endpoint will expect the body to have the following structure:
+This endpoint expects the body to have the following structure:
 ```js
 {
   "schemas": [],
@@ -103,7 +103,28 @@ The endpoint will expect the body to have the following structure:
 ```
 Where the schemas should contain at least one valid json schema to validate the entity against. Multiple schemas may be provided when these reference each other using the keyword `"$ref"`. When this is the case, the `"$id"` of the primary/root schema must also be provided.
 
-**Example:** 
+**Single schema example:**
+```js
+{
+  "schemas": [
+    {
+      "type": "object",
+      "properties": {
+        "foo": { "type": "string" },
+        "bar": { "type": "integer" },
+        "zed": { "type": "boolean" }
+      }
+    }
+  ],
+  "entity": {
+    "foo": "abc",
+    "bar": 123,
+    "zed": true
+  }
+}
+```
+
+**Multiple schemas example:** 
 ```js
 {
   "schemas": [

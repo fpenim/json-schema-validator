@@ -41,7 +41,7 @@ app.post("/validate", [
     } else {
       logger.log("debug", "Received POST request.");
       try {
-        logger.log("debug", "Triggered validation . . .")
+        logger.log("debug", "Triggered validation . . .");
         let errors = handleValidation(req.body.schemas, req.body.entity, req.body.rootSchemaId);
         return res.json(errors || []);
       } catch(err) {

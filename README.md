@@ -28,10 +28,7 @@ npm is distributed with Node.js which means that when you download Node.js, you 
 #### Node.js / npm
   - Get Node.js: https://nodejs.org/en/ (v8.11.1 LTS)
 
-  - If you use [Homebrew](https://brew.sh/) you can install node by doing:
-  ```
-  brew install node
-  ```
+  - If you use [Homebrew](https://brew.sh/) you can install node by doing: `brew install node`
 
 After installation check that everything is correctly installed and which versions you are running:
 ```
@@ -78,13 +75,14 @@ Note: This is the **file path** and not just the directory it will be written to
 
 ### Executing with Docker
   1. Build docker image:
-  ```
-  docker build -t subs/json-schema-validator .
-  ```
+```
+docker build -t subs/json-schema-validator .
+```
   2. Run docker image:
-  ```
-  docker run -p 3020:3020 -d subs/json-schema-validator
-  ```
+```
+docker run -p 3020:3020 -d subs/json-schema-validator
+```
+
 ### Development
 For development purposes using [nodemon](https://nodemon.io/) is useful. It reloads the application everytime something has changed on save time.
 ```

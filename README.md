@@ -5,6 +5,8 @@
 This repository contains a [JSON Schema](http://json-schema.org/). This validator runs as a standalone node server that receives validation requests and gives back it's results.
 The validation is done using the [AJV](https://github.com/epoberezkin/ajv) library version ^6.0.0 that fully supports the JSON Schema **draft-07**.
 
+Latest released version available on: http://json-schema-validator.fpenim.com
+
 ## Contents
 - [Getting Started](README.md#getting-started)
 
@@ -90,10 +92,10 @@ nodemon src/server
 ```
 
 ## Validation API
-This validator exposes one endpoint that will accept POST requests: `/validate` .
+This validator exposes one endpoint that accepts `POST` requests.
 
 ### /validate
-The endpoint will expect the body to have the following structure:
+This endpoint expects the body to have the following structure:
 ```js
 {
   "schemas": [],
@@ -103,7 +105,28 @@ The endpoint will expect the body to have the following structure:
 ```
 Where the schemas should contain at least one valid json schema to validate the entity against. Multiple schemas may be provided when these reference each other using the keyword `"$ref"`. When this is the case, the `"$id"` of the primary/root schema must also be provided.
 
-**Example:** 
+**Single schema example:**
+```js
+{
+  "schemas": [
+    {
+      "type": "object",
+      "properties": {
+        "foo": { "type": "string" },
+        "bar": { "type": "integer" },
+        "zed": { "type": "boolean" }
+      }
+    }
+  ],
+  "entity": {
+    "foo": "abc",
+    "bar": 123,
+    "zed": true
+  }
+}
+```
+
+**Multiple schemas example:** 
 ```js
 {
   "schemas": [

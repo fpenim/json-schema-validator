@@ -9,7 +9,7 @@ function validate(schemas, entity, rootSchemaId) {
         validate(entity);
     } catch(err) {
         logger.log("error", err);
-        throw new Error("Could not find schema for id: " + rootSchemaId);
+        throw new Error(err.message);
     }
 
     logger.log("debug", ajv.errorsText(validate.errors, {dataVar: entity.alias}));

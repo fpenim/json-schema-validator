@@ -45,8 +45,8 @@ app.post("/validate", [
         let errors = handleValidation(req.body.schemas, req.body.entity, req.body.rootSchemaId);
         return res.json(errors || []);
       } catch(err) {
-        logger.log("error", err);
-        return res.status(500).send(new AppError(err.message));
+        logger.log("error", err.stack);
+        return res.status(500).send(new AppError("An unexpected error occured: " + err.message));
       }
     }
   }

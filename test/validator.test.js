@@ -3,7 +3,7 @@ const validate = require("../src/validation/validator");
 
 test("Empty Schema (empty object)", () => {
 
-  let errors = validate([{}], {}, null);
+  let errors = validate([{}], {});
   expect(errors).toBeNull();
 });
 
@@ -14,7 +14,7 @@ test("Attributes Schema", () => {
   let inputObj = fs.readFileSync("examples/entities/attributes.json"); 
   let jsonObj = JSON.parse(inputObj);
 
-  let errors = validate([jsonSchema], jsonObj, null);
+  let errors = validate([jsonSchema], jsonObj);
 
   expect(errors).toBeDefined();
   expect(errors.length).toBe(1);
@@ -30,7 +30,7 @@ test("BioSamples Schema - FAANG \'organism\' sample", () => {
   let inputObj = fs.readFileSync("examples/entities/faang-organism-sample.json");
   let jsonObj = JSON.parse(inputObj);
 
-  let errors = validate([jsonSchema], jsonObj, null);
+  let errors = validate([jsonSchema], jsonObj);
   expect(errors).toBeNull();
 });
 
@@ -41,7 +41,7 @@ test("Study Schema", () => {
   let inputObj = fs.readFileSync("examples/entities/study.json");
   let jsonObj = JSON.parse(inputObj);
 
-  let errors = validate([jsonSchema], jsonObj, null);
+  let errors = validate([jsonSchema], jsonObj);
  
   expect(errors).toBeDefined();
   expect(errors.length).toBe(2);
